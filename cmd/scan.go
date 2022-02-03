@@ -16,7 +16,6 @@ limitations under the License.
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -24,8 +23,6 @@ import (
 
 	"github.com/lukas8219/gcsv/util"
 	"github.com/spf13/cobra"
-	"google.golang.org/api/option"
-	"google.golang.org/api/sheets/v4"
 )
 
 // scanCmd represents the scan command
@@ -44,14 +41,6 @@ func scan(cmd *cobra.Command, args []string) {
 
 	selectedSheet := util.Parse(args[0])
 	log.Println("Searching for Sheet with ID: ", selectedSheet)
-
-	client := getClient()
-	ctx := context.Background()
-
-	svr, err := sheets.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		log.Fatalln(err)
-	}
 
 	columns, err := cmd.Flags().GetInt("endColumn")
 	if err != nil {
@@ -75,6 +64,8 @@ func scan(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
+	svr := getSpreadSheetsService()
+
 	count := 0
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 8, '\t', tabwriter.AlignRight)
 	defer finish(w, &count)
@@ -84,7 +75,7 @@ func scan(cmd *cobra.Command, args []string) {
 	go func(count *int) {
 		for {
 			columnRanges := fmt.Sprintf("%s%d:%s%d", startChar, start, endChar, batchSize)
-			sheet, err := svr.Spreadsheets.Values.Get(selectedSheet, columnRanges).Do()
+			sheet, err := svr.Values.Get(selectedSheet, columnRanges).Do()
 			if err != nil {
 				log.Fatalln(err)
 			}
