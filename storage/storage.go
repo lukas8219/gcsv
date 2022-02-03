@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+const tempFile = "temp-config.txt"
+const dir = "./storage"
+const configFilePath = "./storage/config.txt"
+
 type FavoriteSheet struct {
 	Name string
 	ID   string
@@ -32,7 +36,7 @@ func Store(sheet FavoriteSheet) {
 		return
 	}
 
-	f, err := createOrReadFile("./storage/config.txt")
+	f, err := createOrReadFile(configFilePath)
 	defer f.Close()
 
 	f.WriteString(fmt.Sprintf("%s=%s", sheet.Name, sheet.ID))
@@ -48,13 +52,13 @@ func Store(sheet FavoriteSheet) {
 }
 
 func Remove(id string) error {
-	temp, err := ioutil.TempFile("./storage/", "config-temp.txt")
+	temp, err := ioutil.TempFile(dir, tempFile)
 	defer temp.Close()
 	if err != nil {
 		return err
 	}
 
-	f, err := os.Open("./storage/config.txt")
+	f, err := os.Open(configFilePath)
 	defer f.Close()
 	if err != nil {
 		return err
@@ -64,18 +68,22 @@ func Remove(id string) error {
 
 	for file.Scan() {
 		result := file.Text()
-		if !strings.Contains(result, id) {
+		parsed := strings.Split(result, "=")
+
+		if len(parsed) != 2 {
+			return errors.New("Unmatched config")
+		}
+
+		if parsed[0] != id {
 			temp.WriteString(result)
 			temp.WriteString("\n")
 		}
 	}
-
-	err = os.Rename(temp.Name(), "./storage/config.txt")
-	return err
+	return os.Rename(temp.Name(), configFilePath)
 }
 
 func Get(name string) (string, error) {
-	f, err := os.Open("./storage/config.txt")
+	f, err := os.Open(configFilePath)
 	if err != nil {
 		return "", err
 	}

@@ -59,7 +59,10 @@ func remove(cmd *cobra.Command, args []string) {
 		log.Fatalln("There's no Sheet with this Name")
 	}
 
-	storage.Remove(id)
+	err = storage.Remove(id)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func add(cmd *cobra.Command, args []string) {
