@@ -31,14 +31,9 @@ import (
 // scanCmd represents the scan command
 var scanCmd = &cobra.Command{
 	Use:   "scan",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: scan,
+	Short: "Scans a sheet into Stdout",
+	Long:  `Scans the sheet and print the entire results into the Terminal`,
+	Run:   scan,
 }
 
 func scan(cmd *cobra.Command, args []string) {
@@ -49,8 +44,6 @@ func scan(cmd *cobra.Command, args []string) {
 
 	selectedSheet := util.Parse(args[0])
 	log.Println("Searching for Sheet with ID: ", selectedSheet)
-	//TODO parse this args. Check into cache. If not, and contains HTTP or HTTPS -> try to parse only the ID
-	//Else, go with the whole arg
 
 	client := getClient()
 	ctx := context.Background()
@@ -81,13 +74,6 @@ func scan(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	//Try implementing with GoRoutines
-	//Do an BinarySearch-like algorithm to find all Cells
-	//Request a Batch from a fixed size column
-	//Cache it
-	//Duplicate the batch size, starting from the previous position
-	//Repeat until no more batches return
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, '\t', 0)
 	defer w.Flush()
@@ -125,7 +111,6 @@ func scan(cmd *cobra.Command, args []string) {
 			w.Flush()
 		}
 	}
-
 }
 
 func getColumChar(columns int) string {

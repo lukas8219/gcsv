@@ -33,11 +33,33 @@ var favoriteCmd = &cobra.Command{
 	},
 }
 
+var favoriteRemoveCmd = &cobra.Command{
+	Use:   "rm",
+	Short: "Remove a Sheet from Favorite",
+	Long:  `Remove a Sheet from Favorite. Use with the name`,
+	Run:   remove,
+}
+
 var favoriteAddCommand = &cobra.Command{
 	Use:   "add",
 	Short: "Add a Sheet to Favorite [link]",
 	Long:  `Add a Sheet to Favorite. You can add it using the HTTPS or only the ID as Argument`,
 	Run:   add,
+}
+
+func remove(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		log.Fatal("One and only one argument required")
+	}
+
+	id := args[0]
+
+	_, err := storage.Get(id)
+	if err != nil {
+		log.Fatalln("There's no Sheet with this Name")
+	}
+
+	storage.Remove(id)
 }
 
 func add(cmd *cobra.Command, args []string) {
@@ -62,6 +84,7 @@ func init() {
 	rootCmd.AddCommand(favoriteCmd)
 
 	favoriteCmd.AddCommand(favoriteAddCommand)
+	favoriteCmd.AddCommand(favoriteRemoveCmd)
 
 	favoriteAddCommand.Flags().String("name", "default", "Sets the name")
 	favoriteAddCommand.MarkFlagRequired("name")

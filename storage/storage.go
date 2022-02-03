@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -44,6 +45,33 @@ func Store(sheet FavoriteSheet) {
 	}
 
 	log.Println(fmt.Sprintf("Saved %s with ID: %s", sheet.Name, sheet.ID))
+}
+
+func Remove(id string) error {
+	temp, err := ioutil.TempFile("./storage/", "config-temp.txt")
+	defer temp.Close()
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Open("./storage/config.txt")
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+
+	file := bufio.NewScanner(f)
+
+	for file.Scan() {
+		result := file.Text()
+		if !strings.Contains(result, id) {
+			temp.WriteString(result)
+			temp.WriteString("\n")
+		}
+	}
+
+	err = os.Rename(temp.Name(), "./storage/config.txt")
+	return err
 }
 
 func Get(name string) (string, error) {
