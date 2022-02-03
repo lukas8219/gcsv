@@ -22,6 +22,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/lukas8219/gcsv/util"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -46,7 +47,8 @@ func scan(cmd *cobra.Command, args []string) {
 		log.Fatalln("One and only one argument is needed. Please the link or the name of the saved sheet")
 	}
 
-	selectedSheet := args[0]
+	selectedSheet := util.Parse(args[0])
+	log.Println("Searching for Sheet with ID: ", selectedSheet)
 	//TODO parse this args. Check into cache. If not, and contains HTTP or HTTPS -> try to parse only the ID
 	//Else, go with the whole arg
 
