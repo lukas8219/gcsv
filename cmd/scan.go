@@ -56,20 +56,18 @@ func scan(cmd *cobra.Command, args []string) {
 	//Duplicate the batch size, starting from the previous position
 	//Repeat until no more batches return
 
-	sheet, err := svr.Spreadsheets.Values.BatchGet("1HksEbnev-LX3T5gUfFR_2c9HLL8lodyMRv5q_CuYdnw").Ranges("A1:F10").Do()
+	sheet, err := svr.Spreadsheets.Values.Get("1HksEbnev-LX3T5gUfFR_2c9HLL8lodyMRv5q_CuYdnw", "A1:F10").Do()
 	if err != nil {
 		log.Fatalln(err)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 4, 0, '\t', 0)
 
-	for _, val := range sheet.ValueRanges {
-		for _, rowVal := range val.Values {
-			for _, val := range rowVal {
-				fmt.Fprint(w, val)
-				fmt.Fprint(w, "\t")
-			}
-			fmt.Fprint(w, "\n")
+	for _, val := range sheet.Values {
+		for _, entry := range val {
+			fmt.Fprint(w, entry)
+			fmt.Fprint(w, "\t")
 		}
+		fmt.Fprint(w, "\n")
 	}
 	w.Flush()
 }
