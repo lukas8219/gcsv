@@ -19,19 +19,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 const SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
-const TOKEN_FILE_PATH = "token.json"
-const SECRETS_FILE_PATH = "secret.json"
 
 // authCmd represents the auth command
 var authCmd = &cobra.Command{
@@ -43,18 +39,7 @@ var authCmd = &cobra.Command{
 
 func auth(cmd *cobra.Command, args []string) {
 
-	file, err := ioutil.ReadFile(SECRETS_FILE_PATH)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	configs, err := google.ConfigFromJSON(file, SCOPE)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	token, err := tokenFromFile()
+	configs, token, err := authenticate()
 	if err != nil {
 		token = getTokenFromWeb(configs)
 		saveToken(token)
