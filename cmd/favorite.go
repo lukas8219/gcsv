@@ -16,28 +16,78 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
+	"log"
 
+	"github.com/lukas8219/gcsv/storage"
+	"github.com/lukas8219/gcsv/util"
 	"github.com/spf13/cobra"
 )
 
 // favoriteCmd represents the favorite command
 var favoriteCmd = &cobra.Command{
 	Use:   "favorite",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Add a Sheet to Favorite [link]",
+	Long:  `Add a Sheet to Favorite. You can add it using the HTTPS or only the ID as Argument`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("favorite called")
+		log.Println("Please select one of the options [add] [remove]")
 	},
+}
+
+var favoriteRemoveCmd = &cobra.Command{
+	Use:   "rm",
+	Short: "Remove a Sheet from Favorite",
+	Long:  `Remove a Sheet from Favorite. Use with the name`,
+	Run:   remove,
+}
+
+var favoriteAddCommand = &cobra.Command{
+	Use:   "add",
+	Short: "Add a Sheet to Favorite [link]",
+	Long:  `Add a Sheet to Favorite. You can add it using the HTTPS or only the ID as Argument`,
+	Run:   add,
+}
+
+func remove(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		log.Fatal("One and only one argument required")
+	}
+
+	id := args[0]
+
+	_, err := storage.Get(id)
+	if err != nil {
+		log.Fatalln("There's no Sheet with this Name")
+	}
+
+	storage.Remove(id)
+}
+
+func add(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		log.Fatalln("One and only one argument required [link]")
+	}
+
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	link := util.Parse(args[0])
+
+	storage.Store(storage.FavoriteSheet{
+		Name: name,
+		ID:   link,
+	})
 }
 
 func init() {
 	rootCmd.AddCommand(favoriteCmd)
+
+	favoriteCmd.AddCommand(favoriteAddCommand)
+	favoriteCmd.AddCommand(favoriteRemoveCmd)
+
+	favoriteAddCommand.Flags().String("name", "default", "Sets the name")
+	favoriteAddCommand.MarkFlagRequired("name")
 
 	// Here you will define your flags and configuration settings.
 
