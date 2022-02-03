@@ -16,7 +16,10 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"os"
+	"text/tabwriter"
 
 	"github.com/lukas8219/gcsv/storage"
 	"github.com/lukas8219/gcsv/util"
@@ -31,6 +34,27 @@ var favoriteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Println("Please select one of the options [add] [remove]")
 	},
+}
+
+var favoriteListCommand = &cobra.Command{
+	Use:   "list",
+	Short: "List all the Favorites",
+	Long:  "List all the Favorites",
+	Run:   list,
+}
+
+func list(cmd *cobra.Command, args []string) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 8, '\t', 0)
+
+	fmt.Fprintf(w, "Name\tID\n")
+
+	values := storage.ListAll()
+
+	for _, val := range values {
+		fmt.Fprintf(w, "%s\t%s\n", val.Name, val.ID)
+	}
+
+	w.Flush()
 }
 
 var favoriteRemoveCmd = &cobra.Command{
@@ -88,6 +112,7 @@ func init() {
 
 	favoriteCmd.AddCommand(favoriteAddCommand)
 	favoriteCmd.AddCommand(favoriteRemoveCmd)
+	favoriteCmd.AddCommand(favoriteListCommand)
 
 	favoriteAddCommand.Flags().String("name", "default", "Sets the name")
 	favoriteAddCommand.MarkFlagRequired("name")

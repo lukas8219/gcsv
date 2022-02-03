@@ -75,12 +75,13 @@ func scan(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 8, 8, '\t', 0)
-	defer w.Flush()
+	count := 0
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 8, '\t', tabwriter.AlignRight)
+	defer finish(w, &count)
 
 	result := make(chan interface{})
 
-	go func() {
+	go func(count *int) {
 		for {
 			columnRanges := fmt.Sprintf("%s%d:%s%d", startChar, start, endChar, batchSize)
 			sheet, err := svr.Spreadsheets.Values.Get(selectedSheet, columnRanges).Do()
@@ -103,14 +104,16 @@ func scan(cmd *cobra.Command, args []string) {
 			batchSize *= 2
 		}
 		close(result)
-	}()
-
+	}(&count)
 	for e := range result {
 		fmt.Fprint(w, e)
-		if e == '\n' {
-			w.Flush()
-		}
 	}
+
+}
+
+func finish(w *tabwriter.Writer, count *int) {
+	w.Flush()
+	fmt.Printf("\nTotal of %d entries\n\n", *count)
 }
 
 func getColumChar(columns int) string {
@@ -120,19 +123,10 @@ func getColumChar(columns int) string {
 func init() {
 	rootCmd.AddCommand(scanCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// scanCmd.PersistentFlags().String("foo", "", "A help for foo")
-
 	scanCmd.Flags().Int("endColumn", 5, "Defines the End column")
 	scanCmd.Flags().Int("startColumn", 1, "Define the start column")
 
 	scanCmd.Flags().Int("start", 1, "Defines the starting row")
 	scanCmd.Flags().Int("size", 10, "Define the BatchSize")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// scanCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

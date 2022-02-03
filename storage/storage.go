@@ -13,6 +13,7 @@ import (
 const tempFile = "temp-config.txt"
 const dir = "./storage"
 const configFilePath = "./storage/config.txt"
+const separator = "="
 
 type FavoriteSheet struct {
 	Name string
@@ -39,7 +40,7 @@ func Store(sheet FavoriteSheet) {
 	f, err := createOrReadFile(configFilePath)
 	defer f.Close()
 
-	f.WriteString(fmt.Sprintf("%s=%s", sheet.Name, sheet.ID))
+	f.WriteString(fmt.Sprintf("%s%s%s", sheet.Name, separator, sheet.ID))
 	f.WriteString("\n")
 	err = f.Sync()
 
@@ -68,7 +69,7 @@ func Remove(id string) error {
 
 	for file.Scan() {
 		result := file.Text()
-		parsed := strings.Split(result, "=")
+		parsed := strings.Split(result, separator)
 
 		if len(parsed) != 2 {
 			return errors.New("Unmatched config")
@@ -82,6 +83,43 @@ func Remove(id string) error {
 	return os.Rename(temp.Name(), configFilePath)
 }
 
+func ListAll() []FavoriteSheet {
+	list := make([]FavoriteSheet, 0)
+
+	f, err := os.Open(configFilePath)
+	defer f.Close()
+
+	if err != nil {
+		return []FavoriteSheet{}
+	}
+
+	scanner := bufio.NewScanner(f)
+
+	for scanner.Scan() {
+		entry, err := toSheet(scanner.Text())
+		if err != nil {
+			panic(err)
+		}
+
+		list = append(list, entry)
+	}
+
+	return list
+}
+
+func toSheet(entry string) (FavoriteSheet, error) {
+	separated := strings.Split(entry, "=")
+
+	if len(separated) != 2 {
+		return FavoriteSheet{}, errors.New("Config is corrupted")
+	}
+
+	return FavoriteSheet{
+		Name: separated[0],
+		ID:   separated[1],
+	}, nil
+}
+
 func Get(name string) (string, error) {
 	f, err := os.Open(configFilePath)
 	if err != nil {
@@ -91,13 +129,14 @@ func Get(name string) (string, error) {
 	buffer := bufio.NewScanner(f)
 
 	for buffer.Scan() {
-		entry := strings.Split(buffer.Text(), "=")
-		if len(entry) != 2 {
-			return "", errors.New("Invalid entry on Configs")
+		entry, err := toSheet(buffer.Text())
+
+		if err != nil {
+			panic(err)
 		}
 
-		if entry[0] == name {
-			return entry[1], nil
+		if entry.Name == name {
+			return entry.ID, nil
 		}
 	}
 
