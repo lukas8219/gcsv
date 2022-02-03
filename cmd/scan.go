@@ -75,7 +75,7 @@ func scan(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
-	w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, '\t', 0)
+	w := tabwriter.NewWriter(os.Stdout, 0, 8, 8, '\t', 0)
 	defer w.Flush()
 
 	result := make(chan interface{})

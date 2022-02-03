@@ -24,7 +24,7 @@ func Parse(link string) string {
 }
 
 func parseLink(link string) string {
-	pattern := "(https:\\/\\/docs.google.com\\/spreadsheets\\/d\\/)|(\\/edit#gid=[\\d])"
+	pattern := "(https:\\/\\/docs.google.com\\/spreadsheets\\/d\\/)|(\\/edit#gid=[\\d]+)"
 	regx := regexp.MustCompile(pattern)
 	return regx.ReplaceAllString(link, "")
 }
