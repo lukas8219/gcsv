@@ -41,6 +41,15 @@ to quickly create a Cobra application.`,
 }
 
 func scan(cmd *cobra.Command, args []string) {
+
+	if len(args) != 1 {
+		log.Fatalln("One and only one argument is needed. Please the link or the name of the saved sheet")
+	}
+
+	selectedSheet := args[0]
+	//TODO parse this args. Check into cache. If not, and contains HTTP or HTTPS -> try to parse only the ID
+	//Else, go with the whole arg
+
 	client := getClient()
 	ctx := context.Background()
 
@@ -56,7 +65,7 @@ func scan(cmd *cobra.Command, args []string) {
 	//Duplicate the batch size, starting from the previous position
 	//Repeat until no more batches return
 
-	sheet, err := svr.Spreadsheets.Values.Get("1HksEbnev-LX3T5gUfFR_2c9HLL8lodyMRv5q_CuYdnw", "A1:F10").Do()
+	sheet, err := svr.Spreadsheets.Values.Get(selectedSheet, "A1:F10").Do()
 	if err != nil {
 		log.Fatalln(err)
 	}
