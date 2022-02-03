@@ -16,7 +16,15 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"text/tabwriter"
+
 	"github.com/spf13/cobra"
+	"google.golang.org/api/option"
+	"google.golang.org/api/sheets/v4"
 )
 
 // createCmd represents the create command
@@ -29,8 +37,41 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-	},
+	Run: create,
+}
+
+func create(cmd *cobra.Command, args []string) {
+	client := getClient()
+	ctx := context.Background()
+
+	svr, err := sheets.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	//Try implementing with GoRoutines
+	//Do an BinarySearch-like algorithm to find all Cells
+	//Request a Batch from a fixed size column
+	//Cache it
+	//Duplicate the batch size, starting from the previous position
+	//Repeat until no more batches return
+
+	sheet, err := svr.Spreadsheets.Values.BatchGet("1HksEbnev-LX3T5gUfFR_2c9HLL8lodyMRv5q_CuYdnw").Ranges("A1:F10").Do()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	w := tabwriter.NewWriter(os.Stdout, 0, 4, 0, '\t', 0)
+
+	for _, val := range sheet.ValueRanges {
+		for _, rowVal := range val.Values {
+			for _, val := range rowVal {
+				fmt.Fprint(w, val)
+				fmt.Fprint(w, "\t")
+			}
+			fmt.Fprint(w, "\n")
+		}
+	}
+	w.Flush()
 }
 
 func init() {
