@@ -58,6 +58,28 @@ func scan(cmd *cobra.Command, args []string) {
 		log.Fatalln(err)
 	}
 
+	columns, err := cmd.Flags().GetInt("endColumn")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	end, err := cmd.Flags().GetInt("startColumn")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	startChar := getColumChar(end)
+	endChar := getColumChar(columns)
+	batchSize, err := cmd.Flags().GetInt("size")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	start, err := cmd.Flags().GetInt("start")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	//Try implementing with GoRoutines
 	//Do an BinarySearch-like algorithm to find all Cells
 	//Request a Batch from a fixed size column
@@ -65,20 +87,47 @@ func scan(cmd *cobra.Command, args []string) {
 	//Duplicate the batch size, starting from the previous position
 	//Repeat until no more batches return
 
-	sheet, err := svr.Spreadsheets.Values.Get(selectedSheet, "A1:F10").Do()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	w := tabwriter.NewWriter(os.Stdout, 0, 4, 0, '\t', 0)
+	w := tabwriter.NewWriter(os.Stdout, 0, 4, 4, '\t', 0)
+	defer w.Flush()
 
-	for _, val := range sheet.Values {
-		for _, entry := range val {
-			fmt.Fprint(w, entry)
-			fmt.Fprint(w, "\t")
+	result := make(chan interface{})
+
+	go func() {
+		for {
+			columnRanges := fmt.Sprintf("%s%d:%s%d", startChar, start, endChar, batchSize)
+			sheet, err := svr.Spreadsheets.Values.Get(selectedSheet, columnRanges).Do()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			if len(sheet.Values) == 0 {
+				break
+			}
+
+			for _, val := range sheet.Values {
+				for _, entry := range val {
+					result <- entry
+					result <- "\t"
+				}
+				result <- "\n"
+			}
+			start = batchSize
+			batchSize *= 2
 		}
-		fmt.Fprint(w, "\n")
+		close(result)
+	}()
+
+	for e := range result {
+		fmt.Fprint(w, e)
+		if e == '\n' {
+			w.Flush()
+		}
 	}
-	w.Flush()
+
+}
+
+func getColumChar(columns int) string {
+	return string('a' + (columns - 1))
 }
 
 func init() {
@@ -89,6 +138,12 @@ func init() {
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
 	// scanCmd.PersistentFlags().String("foo", "", "A help for foo")
+
+	scanCmd.Flags().Int("endColumn", 5, "Defines the End column")
+	scanCmd.Flags().Int("startColumn", 1, "Define the start column")
+
+	scanCmd.Flags().Int("start", 1, "Defines the starting row")
+	scanCmd.Flags().Int("size", 10, "Define the BatchSize")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
