@@ -35,12 +35,10 @@ func getFilePath() string {
 
 func createOrReadFile() (*os.File, error) {
 	dirPath := getDirPath()
-	filePath := getFilePath()
-	f, err := os.OpenFile(dirPath, os.O_RDWR|os.O_APPEND, os.FileMode(os.O_APPEND))
+	f, err := os.OpenFile(getFilePath(), os.O_RDWR|os.O_APPEND, os.FileMode(os.O_APPEND))
 	if err != nil {
 		err = os.MkdirAll(dirPath, os.ModePerm)
-		f, err = os.Create(filePath)
-		log.Println(err)
+		f, err = os.Create(getFilePath())
 	}
 	return f, err
 }
@@ -103,7 +101,7 @@ func Remove(id string) error {
 func ListAll() []FavoriteSheet {
 	list := make([]FavoriteSheet, 0)
 
-	f, err := os.Open(configFilePath)
+	f, err := os.Open(getFilePath())
 	defer f.Close()
 
 	if err != nil {
@@ -138,7 +136,7 @@ func toSheet(entry string) (FavoriteSheet, error) {
 }
 
 func Get(name string) (string, error) {
-	f, err := os.Open(configFilePath)
+	f, err := os.Open(getFilePath())
 	if err != nil {
 		return "", err
 	}

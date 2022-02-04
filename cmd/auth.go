@@ -44,14 +44,15 @@ func auth(cmd *cobra.Command, args []string) {
 		log.Println("Error occurred when trying to fetch Token locally. Retrieving another one\t\t", err)
 		token = getTokenFromWeb(configs)
 		saveToken(token)
-
+	} else {
+		log.Println("You're already authenticated!")
 	}
 	_ = configs.Client(context.Background(), token)
 }
 
 func saveToken(token *oauth2.Token) {
 	log.Printf("Saving credentials in %s", storage.GetTokenFilePath())
-	f, err := storage.GetTokenFile()
+	f, err := storage.CreateOrWriteTokenFile()
 	defer f.Close()
 	if err != nil {
 		log.Fatalf("Unable to cache oauth token: %v", err)
@@ -81,12 +82,13 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 }
 
 func tokenFromFile() (*oauth2.Token, error) {
-	f, err := storage.GetTokenFile()
+	f, err := storage.ReadTokenFile()
 	defer f.Close()
 
 	if err != nil {
 		return nil, err
 	}
+
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
 	return tok, err
