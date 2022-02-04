@@ -20,9 +20,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 
+	"github.com/lukas8219/gcsv/storage"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 )
@@ -41,23 +41,23 @@ func auth(cmd *cobra.Command, args []string) {
 
 	configs, token, err := authenticate()
 	if err != nil {
+		log.Println("Error occurred when trying to fetch Token locally. Retrieving another one\t\t", err)
 		token = getTokenFromWeb(configs)
 		saveToken(token)
-	} else {
-		log.Println("Already authenticated!")
-	}
 
+	}
 	_ = configs.Client(context.Background(), token)
 }
 
 func saveToken(token *oauth2.Token) {
-	log.Printf("Saving credentials in %s", TOKEN_FILE_PATH)
-	f, err := os.OpenFile(TOKEN_FILE_PATH, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	log.Printf("Saving credentials in %s", storage.GetTokenFilePath())
+	f, err := storage.GetTokenFile()
+	defer f.Close()
 	if err != nil {
 		log.Fatalf("Unable to cache oauth token: %v", err)
 	}
-	defer f.Close()
 	json.NewEncoder(f).Encode(token)
+	log.Println("Successfully saved the Token into")
 }
 
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
@@ -81,11 +81,12 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 }
 
 func tokenFromFile() (*oauth2.Token, error) {
-	f, err := os.Open(TOKEN_FILE_PATH)
+	f, err := storage.GetTokenFile()
+	defer f.Close()
+
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
 	return tok, err
