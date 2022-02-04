@@ -15,8 +15,12 @@ limitations under the License.
 */
 package main
 
-import "github.com/lukas8219/gcsv/cmd"
+import (
+	"github.com/lukas8219/gcsv/cmd"
+	"github.com/lukas8219/gcsv/storage"
+)
 
 func main() {
-  cmd.Execute()
+	storage.Migrate()
+	cmd.Execute()
 }
