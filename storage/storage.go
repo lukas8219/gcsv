@@ -7,12 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 const tempFile = "temp-config.txt"
-const dir = "./storage"
-const configFilePath = "./storage/config.txt"
+const configDirName = "/.gcsv"
+const configFilePath = "config.txt"
 const separator = "="
 
 type FavoriteSheet struct {
@@ -20,10 +21,26 @@ type FavoriteSheet struct {
 	ID   string
 }
 
-func createOrReadFile(path string) (*os.File, error) {
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_APPEND, os.FileMode(os.O_APPEND))
+func getDirPath() string {
+	dirname, err := os.UserHomeDir()
 	if err != nil {
-		f, err = os.Create(path)
+		log.Fatal("Not able to get user home dir", err)
+	}
+	return filepath.Join(dirname, configDirName)
+}
+
+func getFilePath() string {
+	return filepath.Join(getDirPath(), configFilePath)
+}
+
+func createOrReadFile() (*os.File, error) {
+	dirPath := getDirPath()
+	filePath := getFilePath()
+	f, err := os.OpenFile(dirPath, os.O_RDWR|os.O_APPEND, os.FileMode(os.O_APPEND))
+	if err != nil {
+		err = os.MkdirAll(dirPath, os.ModePerm)
+		f, err = os.Create(filePath)
+		log.Println(err)
 	}
 	return f, err
 }
@@ -37,7 +54,7 @@ func Store(sheet FavoriteSheet) {
 		return
 	}
 
-	f, err := createOrReadFile(configFilePath)
+	f, err := createOrReadFile()
 	defer f.Close()
 
 	f.WriteString(fmt.Sprintf("%s%s%s", sheet.Name, separator, sheet.ID))
@@ -53,7 +70,7 @@ func Store(sheet FavoriteSheet) {
 }
 
 func Remove(id string) error {
-	temp, err := ioutil.TempFile(dir, tempFile)
+	temp, err := ioutil.TempFile(configDirName, tempFile)
 	defer temp.Close()
 	if err != nil {
 		return err
