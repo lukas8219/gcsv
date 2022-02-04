@@ -68,13 +68,13 @@ func Store(sheet FavoriteSheet) {
 }
 
 func Remove(id string) error {
-	temp, err := ioutil.TempFile(configDirName, tempFile)
+	temp, err := ioutil.TempFile(getDirPath(), tempFile)
 	defer temp.Close()
 	if err != nil {
 		return err
 	}
 
-	f, err := os.Open(configFilePath)
+	f, err := os.Open(getFilePath())
 	defer f.Close()
 	if err != nil {
 		return err
@@ -95,7 +95,7 @@ func Remove(id string) error {
 			temp.WriteString("\n")
 		}
 	}
-	return os.Rename(temp.Name(), configFilePath)
+	return os.Rename(temp.Name(), getFilePath())
 }
 
 func ListAll() []FavoriteSheet {
