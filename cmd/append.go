@@ -17,8 +17,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"strings"
 
+	"github.com/lukas8219/gcsv/storage"
 	"github.com/spf13/cobra"
+	"google.golang.org/api/sheets/v4"
 )
 
 // appendCmd represents the append command
@@ -32,12 +36,65 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("append called")
+		svc := getSpreadSheetsService()
+
+		if len(args) != 1 {
+			log.Fatal("One and only one argument is required!")
+		}
+
+		delimiter, err := cmd.Flags().GetString("d")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		input := args[0]
+		entry := strings.Split(input, delimiter)
+
+		values := make([][]interface{}, 1)
+		values[0] = make([]interface{}, len(entry))
+		v := values[0]
+		for i, val := range entry {
+			v[i] = val
+		}
+
+		value := &sheets.ValueRange{
+			Values: values,
+		}
+
+		param, err := cmd.Flags().GetString("name")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		id, err := storage.Get(param)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		startChar := 'A'
+		endChar := getEndChar(entry)
+
+		rangeId := fmt.Sprintf("%c1:%s1", startChar, endChar)
+
+		_, err = svc.Values.Append(id, rangeId, value).ValueInputOption("RAW").Do()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Println("Success!")
 	},
+}
+
+func getEndChar(entry []string) string {
+	return string('a' + len(entry))
 }
 
 func init() {
 	rootCmd.AddCommand(appendCmd)
+	appendCmd.Flags().String("d", ",", "Delimiter")
+	appendCmd.Flags().String("name", "", "Name")
+
+	appendCmd.MarkFlagRequired("name")
 
 	// Here you will define your flags and configuration settings.
 
