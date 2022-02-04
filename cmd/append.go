@@ -47,6 +47,8 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 
+		storage := storage.GetStorage()
+
 		input := args[0]
 		entry := strings.Split(input, delimiter)
 

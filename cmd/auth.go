@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -39,6 +40,7 @@ var authCmd = &cobra.Command{
 
 func auth(cmd *cobra.Command, args []string) {
 
+	storage.GetToken()
 	configs, token, err := authenticate()
 	if err != nil {
 		log.Println("Error occurred when trying to fetch Token locally. Retrieving another one\t\t", err)
@@ -51,14 +53,12 @@ func auth(cmd *cobra.Command, args []string) {
 }
 
 func saveToken(token *oauth2.Token) {
-	log.Printf("Saving credentials in %s", storage.GetTokenFilePath())
-	f, err := storage.CreateOrWriteTokenFile()
-	defer f.Close()
-	if err != nil {
-		log.Fatalf("Unable to cache oauth token: %v", err)
+	buf := bytes.NewBuffer(nil)
+	json.NewEncoder(buf).Encode(token)
+	if err := storage.SaveToken(buf.String()); err != nil {
+		log.Fatal(err)
 	}
-	json.NewEncoder(f).Encode(token)
-	log.Println("Successfully saved the Token into")
+	log.Println("Successfully saved the Token")
 }
 
 func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
@@ -79,19 +79,6 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 	}
 	log.Println("Sucessfully authenticated!")
 	return tok
-}
-
-func tokenFromFile() (*oauth2.Token, error) {
-	f, err := storage.ReadTokenFile()
-	defer f.Close()
-
-	if err != nil {
-		return nil, err
-	}
-
-	tok := &oauth2.Token{}
-	err = json.NewDecoder(f).Decode(tok)
-	return tok, err
 }
 
 func init() {

@@ -3,28 +3,13 @@ package util
 import (
 	"regexp"
 	"strings"
-
-	"github.com/lukas8219/gcsv/storage"
 )
 
-func Parse(link string) string {
-	preParse := link
-
+func ParseLink(link string) string {
 	if strings.Contains(link, "https://") {
-		return parseLink(link)
+		pattern := "(https:\\/\\/docs.google.com\\/spreadsheets\\/d\\/)|(\\/edit#gid=[\\d]+)"
+		regx := regexp.MustCompile(pattern)
+		return regx.ReplaceAllString(link, "")
 	}
-
-	link, error := storage.Get(link)
-
-	if error != nil {
-		return preParse
-	}
-
 	return link
-}
-
-func parseLink(link string) string {
-	pattern := "(https:\\/\\/docs.google.com\\/spreadsheets\\/d\\/)|(\\/edit#gid=[\\d]+)"
-	regx := regexp.MustCompile(pattern)
-	return regx.ReplaceAllString(link, "")
 }

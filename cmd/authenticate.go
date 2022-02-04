@@ -23,7 +23,7 @@ func authenticate() (*oauth2.Config, *oauth2.Token, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	log.Println("Reading the Token Locally")
-	token, err := tokenFromFile()
+	log.Println("Reading the Token")
+	token, err := storage.GetToken()
 	return configs, token, err
 }

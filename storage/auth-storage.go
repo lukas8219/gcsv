@@ -1,9 +1,15 @@
 package storage
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"golang.org/x/oauth2"
 )
 
 const FILENAME = "./secret.json"
@@ -11,6 +17,41 @@ const FILENAME = "./secret.json"
 func GetSecretFilePath() string {
 	dirPath := getDirPath()
 	return filepath.Join(dirPath, FILENAME)
+}
+
+func GetToken() (*oauth2.Token, error) {
+	con := GetConnection()
+	query := `SELECT json FROM authentication WHERE type = 'token'`
+	res, err := con.QueryContext(context.Background(), query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var result string
+	res.Next()
+	if err = res.Scan(&result); err != nil {
+		return nil, err
+	}
+	var token *oauth2.Token
+	json.NewDecoder(strings.NewReader(result)).Decode(&token)
+	return token, err
+}
+
+func SaveToken(token string) error {
+	con := GetConnection()
+
+	statement := `UPDATE authentication
+	SET json='%s'
+	WHERE type='token';
+	
+	INSERT INTO authentication (type, json)
+	SELECT 'token', '%s'
+	WHERE (Select Changes() = 0);
+	`
+
+	fmtStatement := fmt.Sprintf(statement, token, token)
+
+	_, err := con.ExecContext(context.Background(), fmtStatement)
+	return err
 }
 
 func GetSecretFile() (*os.File, error) {

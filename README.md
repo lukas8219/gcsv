@@ -8,4 +8,6 @@
 - [X] Create a Command to Append a line into a CSV
 - [ ] Create a Command to Upload the CSV into Google Sheet
 - [ ] Extra: Add a flag to LIST: Download the Content to a CSV
+- [ ] Create Config COMMAND with Set, Get to Delimiter/Selected
+- [ ] Add further support to multiple accounts
 - [ ] Dealing with Blank Spaces
