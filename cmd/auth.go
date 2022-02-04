@@ -27,7 +27,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
+const SCOPE = "https://www.googleapis.com/auth/spreadsheets"
 
 // authCmd represents the auth command
 var authCmd = &cobra.Command{
