@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -25,12 +26,13 @@ func GetTokenFilePath() string {
 }
 
 func CreateOrWriteTokenFile() (*os.File, error) {
-	return getTokenFile(os.O_RDWR | os.O_CREATE)
+	return getTokenFile(os.O_RDWR | os.O_CREATE | os.O_APPEND)
 }
 
 func getTokenFile(permission int) (*os.File, error) {
 	file, err := os.OpenFile(GetTokenFilePath(), permission, 0600)
 	if err != nil {
+		log.Println(err)
 		os.MkdirAll(getDirPath(), os.ModePerm)
 		return os.Open("./token.json")
 	}
