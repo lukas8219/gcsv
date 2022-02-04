@@ -52,7 +52,8 @@ func Migrate() {
 	CREATE TABLE IF NOT EXISTS favorites(
 		id INT PRIMARY KEY,
 		name TEXT,
-		sheetId TEXT
+		sheetId TEXT,
+		UNIQUE(name)
 	);
 	`
 	_, err = con.ExecContext(context.Background(), favoritesTable)

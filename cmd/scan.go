@@ -21,6 +21,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/lukas8219/gcsv/storage"
 	"github.com/lukas8219/gcsv/util"
 	"github.com/spf13/cobra"
 )
@@ -38,10 +39,6 @@ func scan(cmd *cobra.Command, args []string) {
 	if len(args) != 1 {
 		log.Fatalln("One and only one argument is needed. Please the link or the name of the saved sheet")
 	}
-
-	selectedSheet := util.Parse(args[0])
-	log.Println("Searching for Sheet with ID: ", selectedSheet)
-
 	columns, err := cmd.Flags().GetInt("endColumn")
 	if err != nil {
 		log.Fatalln(err)
@@ -65,10 +62,21 @@ func scan(cmd *cobra.Command, args []string) {
 	}
 
 	svr := getSpreadSheetsService()
+	storage := storage.GetStorage()
+
+	selectedSheet := util.ParseLink(args[0])
+	favorite, err := storage.Get(selectedSheet)
+	if err == nil {
+		selectedSheet = favorite
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Searching for Sheet with ID: ", selectedSheet)
 
 	count := 0
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 8, '\t', tabwriter.AlignRight)
-	defer finish(w, &count)
+	defer w.Flush()
 
 	result := make(chan interface{})
 
@@ -100,11 +108,6 @@ func scan(cmd *cobra.Command, args []string) {
 		fmt.Fprint(w, e)
 	}
 
-}
-
-func finish(w *tabwriter.Writer, count *int) {
-	w.Flush()
-	fmt.Printf("\nTotal of %d entries\n\n", *count)
 }
 
 func getColumChar(columns int) string {

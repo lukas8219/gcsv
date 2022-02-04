@@ -45,6 +45,7 @@ var favoriteListCommand = &cobra.Command{
 
 func list(cmd *cobra.Command, args []string) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 8, 8, '\t', 0)
+	storage := storage.GetStorage()
 
 	fmt.Fprintf(w, "Name\tID\n")
 
@@ -72,6 +73,7 @@ var favoriteAddCommand = &cobra.Command{
 }
 
 func remove(cmd *cobra.Command, args []string) {
+	storage := storage.GetStorage()
 	if len(args) != 1 {
 		log.Fatal("One and only one argument required")
 	}
@@ -98,12 +100,16 @@ func add(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	database := storage.GetStorage()
 
-	link := util.Parse(args[0])
+	id, err := database.Get(args[0])
+	if err != nil {
+		id = util.ParseLink(args[0])
+	}
 
-	storage.Store(storage.FavoriteSheet{
+	database.Store(storage.FavoriteSheet{
 		Name: name,
-		ID:   link,
+		ID:   id,
 	})
 }
 

@@ -19,10 +19,6 @@ func GetSecretFilePath() string {
 	return filepath.Join(dirPath, FILENAME)
 }
 
-type Result struct {
-	Json string
-}
-
 func GetToken() (*oauth2.Token, error) {
 	con := GetConnection()
 	query := `SELECT json FROM authentication WHERE type = 'token'`
