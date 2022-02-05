@@ -40,7 +40,8 @@ func Migrate() {
 	configTable := `
 	CREATE TABLE IF NOT EXISTS config(
 		property_key TEXT,
-		property_value TEXT
+		property_value TEXT,
+		UNIQUE(property_key)
 	);
 	`
 	_, err = con.ExecContext(context.Background(), configTable)

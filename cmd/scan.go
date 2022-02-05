@@ -35,9 +35,9 @@ var scanCmd = &cobra.Command{
 }
 
 func scan(cmd *cobra.Command, args []string) {
-
+	storage := storage.GetStorage()
 	if len(args) != 1 {
-		log.Fatalln("One and only one argument is needed. Please the link or the name of the saved sheet")
+		args = append(args, storage.GetSelectedFavorite())
 	}
 	columns, err := cmd.Flags().GetInt("endColumn")
 	if err != nil {
@@ -62,15 +62,11 @@ func scan(cmd *cobra.Command, args []string) {
 	}
 
 	svr := getSpreadSheetsService()
-	storage := storage.GetStorage()
 
 	selectedSheet := util.ParseLink(args[0])
 	favorite, err := storage.Get(selectedSheet)
 	if err == nil {
 		selectedSheet = favorite
-	}
-	if err != nil {
-		log.Fatal(err)
 	}
 	log.Println("Searching for Sheet with ID: ", selectedSheet)
 

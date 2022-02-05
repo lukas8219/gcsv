@@ -43,6 +43,51 @@ func getDirPath() string {
 	return filepath.Join(dirname, configDirName)
 }
 
+func (s *Storage) SetProp(prop string, value string) error {
+	stmt := fmt.Sprintf(`
+	UPDATE config SET property_value = '%s' WHERE property_key = '%s';
+	INSERT INTO config (property_key, property_value)
+	SELECT '%s', '%s'
+	WHERE (Select Changes() = 0);
+	`, value, prop, prop, value)
+	_, err := s.Conn.ExecContext(context.Background(), stmt)
+	return err
+}
+
+func (s *Storage) GetSelectedFavorite() string {
+	favorite, err := s.GetProp("favorite")
+	if err != nil {
+		log.Fatal("No favorite selected")
+	}
+	return favorite
+}
+
+func (s *Storage) SetDelimiter(delimiter string) {
+	s.SetProp("delimiter", delimiter)
+}
+
+func (s *Storage) SetSelectedFavorite(name string) {
+	s.SetProp("favorite", name)
+}
+
+func (s *Storage) GetProp(prop string) (string, error) {
+	query := fmt.Sprintf(`
+	SELECT property_value FROM config WHERE property_key = '%s';
+	`, prop)
+
+	res, err := s.Conn.QueryContext(context.Background(), query)
+	if err != nil {
+		return "", err
+	}
+
+	if res.Next() == true {
+		var result string
+		res.Scan(&result)
+		return result, nil
+	}
+	return "", errors.New("Prop not found")
+}
+
 func (s *Storage) Store(sheet FavoriteSheet) {
 	query := `
 	INSERT INTO favorites(name, sheetId) VALUES('%s','%s');
@@ -97,6 +142,6 @@ func (s *Storage) Get(name string) (string, error) {
 		res.Scan(&id)
 		return id, nil
 	} else {
-		return "", errors.New("Not found")
+		return "", errors.New(fmt.Sprintf("Favorite Sheet '%s' Not Found", name))
 	}
 }
