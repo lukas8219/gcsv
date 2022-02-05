@@ -14,6 +14,8 @@ const tempFile = "temp-config.txt"
 const configDirName = "/.gcsv"
 const configFilePath = "config.txt"
 const separator = "="
+const delimiter_key = "delimiter"
+const favorite_key = "favorite"
 
 type Storage struct {
 	Conn *sql.Conn
@@ -54,8 +56,16 @@ func (s *Storage) SetProp(prop string, value string) error {
 	return err
 }
 
+func (s *Storage) GetDelimiter() string {
+	del, err := s.GetProp(delimiter_key)
+	if err != nil {
+		return ","
+	}
+	return del
+}
+
 func (s *Storage) GetSelectedFavorite() string {
-	favorite, err := s.GetProp("favorite")
+	favorite, err := s.GetProp(favorite_key)
 	if err != nil {
 		log.Fatal("No favorite selected")
 	}
@@ -63,11 +73,11 @@ func (s *Storage) GetSelectedFavorite() string {
 }
 
 func (s *Storage) SetDelimiter(delimiter string) {
-	s.SetProp("delimiter", delimiter)
+	s.SetProp(delimiter_key, delimiter)
 }
 
 func (s *Storage) SetSelectedFavorite(name string) {
-	s.SetProp("favorite", name)
+	s.SetProp(favorite_key, name)
 }
 
 func (s *Storage) GetProp(prop string) (string, error) {
