@@ -16,18 +16,16 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/lukas8219/gcsv/storage"
 	"github.com/spf13/cobra"
 	"google.golang.org/api/sheets/v4"
 )
 
-// appendCmd represents the append command
-var appendCmd = &cobra.Command{
-	Use:   "append",
+// createCmd represents the create command
+var createCmd = &cobra.Command{
+	Use:   "create",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -36,76 +34,63 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		svc := getSpreadSheetsService()
 
 		if len(args) != 1 {
-			log.Fatal("One and only one argument is required!")
+			log.Fatal("One and only one argument is required [Title]")
 		}
 
-		storage := storage.GetStorage()
+		svc := getSpreadSheetsService()
 
-		delimiter, err := cmd.Flags().GetString("d")
-		if delimiter == "" {
-			delimiter = storage.GetDelimiter()
-		}
-
-		input := args[0]
-		entry := strings.Split(input, delimiter)
-
-		values := make([][]interface{}, 1)
-		values[0] = make([]interface{}, len(entry))
-		v := values[0]
-		for i, val := range entry {
-			v[i] = val
-		}
-
-		value := &sheets.ValueRange{
-			Values: values,
-		}
-
-		param, err := cmd.Flags().GetString("name")
-		if err != nil {
-			log.Fatal(err)
-		}
-		if param == "" {
-			param = storage.GetSelectedFavorite()
-		}
-
-		id, err := storage.Get(param)
+		name, err := cmd.Flags().GetString("name")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		startChar := 'A'
-		endChar := getEndChar(entry)
+		validateName(name)
 
-		rangeId := fmt.Sprintf("%c1:%s1", startChar, endChar)
-
-		log.Printf("Apppending to Sheet '%s'", id)
-		_, err = svc.Values.Append(id, rangeId, value).ValueInputOption("RAW").Do()
+		res, err := svc.Create(&sheets.Spreadsheet{
+			Properties: &sheets.SpreadsheetProperties{
+				Title: args[0],
+			},
+		}).Do()
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println("Success!")
+
+		log.Printf("Sheet '%s' saved successfully\n", args[0])
+		log.Printf("Saving it into Favorite")
+
+		database := storage.GetStorage()
+
+		database.Store(storage.FavoriteSheet{
+			Name: name,
+			ID:   res.SpreadsheetId,
+		})
+
 	},
 }
 
-func getEndChar(entry []string) string {
-	return string('a' + len(entry))
+func validateName(name string) {
+	storage := storage.GetStorage()
+	_, err := storage.Get(name)
+	if err == nil {
+		log.Fatal("Name already exists. Please give a different name to save it as favorite or remove the other")
+	}
 }
 
 func init() {
-	rootCmd.AddCommand(appendCmd)
-	appendCmd.Flags().String("d", "", "Delimiter")
-	appendCmd.Flags().String("name", "", "Name")
+	rootCmd.AddCommand(createCmd)
+
+	createCmd.Flags().String("name", "", "name")
+	createCmd.MarkFlagRequired("name")
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// appendCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// appendCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
