@@ -42,12 +42,12 @@ to quickly create a Cobra application.`,
 			log.Fatal("One and only one argument is required!")
 		}
 
-		delimiter, err := cmd.Flags().GetString("d")
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		storage := storage.GetStorage()
+
+		delimiter, err := cmd.Flags().GetString("d")
+		if delimiter == "" {
+			delimiter = storage.GetDelimiter()
+		}
 
 		input := args[0]
 		entry := strings.Split(input, delimiter)

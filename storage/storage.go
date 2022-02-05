@@ -54,6 +54,14 @@ func (s *Storage) SetProp(prop string, value string) error {
 	return err
 }
 
+func (s *Storage) GetDelimiter() string {
+	del, err := s.GetProp("delimiter")
+	if err != nil {
+		return ","
+	}
+	return del
+}
+
 func (s *Storage) GetSelectedFavorite() string {
 	favorite, err := s.GetProp("favorite")
 	if err != nil {
