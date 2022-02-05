@@ -72,6 +72,27 @@ var favoriteAddCommand = &cobra.Command{
 	Run:   add,
 }
 
+var favoriteSetCommand = &cobra.Command{
+	Use:   "set",
+	Short: "Set a favorite",
+	Long:  "Set a Favorite",
+	Run:   setFavorite,
+}
+
+func setFavorite(cmd *cobra.Command, args []string) {
+	if len(args) != 1 {
+		log.Fatal("One and only one argument is required [name]")
+	}
+
+	storage := storage.GetStorage()
+	_, err := storage.Get(args[0])
+	if err != nil {
+		log.Fatal(err)
+	}
+	storage.SetSelectedFavorite(args[0])
+	log.Printf("Selected Favorite Set to %s\n", args[0])
+}
+
 func remove(cmd *cobra.Command, args []string) {
 	storage := storage.GetStorage()
 	if len(args) != 1 {
@@ -119,6 +140,7 @@ func init() {
 	favoriteCmd.AddCommand(favoriteAddCommand)
 	favoriteCmd.AddCommand(favoriteRemoveCmd)
 	favoriteCmd.AddCommand(favoriteListCommand)
+	favoriteCmd.AddCommand(favoriteSetCommand)
 
 	favoriteAddCommand.Flags().String("name", "default", "Sets the name")
 	favoriteAddCommand.MarkFlagRequired("name")

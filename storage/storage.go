@@ -54,6 +54,22 @@ func (s *Storage) SetProp(prop string, value string) error {
 	return err
 }
 
+func (s *Storage) GetSelectedFavorite() string {
+	favorite, err := s.GetProp("favorite")
+	if err != nil {
+		log.Fatal("No favorite selected")
+	}
+	return favorite
+}
+
+func (s *Storage) SetDelimiter(delimiter string) {
+	s.SetProp("delimiter", delimiter)
+}
+
+func (s *Storage) SetSelectedFavorite(name string) {
+	s.SetProp("favorite", name)
+}
+
 func (s *Storage) GetProp(prop string) (string, error) {
 	query := fmt.Sprintf(`
 	SELECT property_value FROM config WHERE property_key = '%s';
@@ -126,6 +142,6 @@ func (s *Storage) Get(name string) (string, error) {
 		res.Scan(&id)
 		return id, nil
 	} else {
-		return "", errors.New("Not found")
+		return "", errors.New(fmt.Sprintf("Favorite Sheet '%s' Not Found", name))
 	}
 }

@@ -67,6 +67,9 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			log.Fatal(err)
 		}
+		if param == "" {
+			param = storage.GetSelectedFavorite()
+		}
 
 		id, err := storage.Get(param)
 		if err != nil {
@@ -78,11 +81,11 @@ to quickly create a Cobra application.`,
 
 		rangeId := fmt.Sprintf("%c1:%s1", startChar, endChar)
 
+		log.Printf("Apppending to Sheet '%s'", param)
 		_, err = svc.Values.Append(id, rangeId, value).ValueInputOption("RAW").Do()
 		if err != nil {
 			log.Fatal(err)
 		}
-
 		log.Println("Success!")
 	},
 }
@@ -93,10 +96,8 @@ func getEndChar(entry []string) string {
 
 func init() {
 	rootCmd.AddCommand(appendCmd)
-	appendCmd.Flags().String("d", ",", "Delimiter")
+	appendCmd.Flags().String("d", "", "Delimiter")
 	appendCmd.Flags().String("name", "", "Name")
-
-	appendCmd.MarkFlagRequired("name")
 
 	// Here you will define your flags and configuration settings.
 
