@@ -7,7 +7,7 @@
 - [X] Refactor to new Favorite Sheets Feature
 - [X] Create a Command to Append a line into a CSV
 - [X] Create Config COMMAND with Set, Get to Delimiter/Selected
-- [ ] Create "Create" Command to Create a Sheet from Zero
+- [X] Create "Create" Command to Create a Sheet from Zero
 - [ ] Create a Command to Upload the CSV into Google Sheet
 - [ ] Extra: Add a flag to LIST: Download the Content to a CSV
 - [ ] [BONUS]Add further support to multiple accounts
