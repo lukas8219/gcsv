@@ -1,6 +1,6 @@
+This a CLI for personal use to manage my Google Sheets. Written in GO using Cobra CLI
+
 # Objectives
-
-
 - [X] Create a Command to Authenticate in the Application
 - [X] Create a Command to List All the Content from a Sheet
 - [X] Create a Command to Add a Sheet to Favorites
